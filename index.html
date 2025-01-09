@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Portrait Carousel</title>
+    <style>
+        body {
+            min-height: 100vh;
+            background: #0f0f1a;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        /* Cyberpunk/Stream Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(15,15,26,0.9), rgba(45,19,86,0.9)),
+                linear-gradient(rgba(20,20,30,0.8) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(20,20,30,0.8) 2px, transparent 2px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            animation: gridMove 20s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0, 0 0, 0 0; }
+            100% { background-position: 0 0, -30px -30px, -30px -30px; }
+        }
+
+        /* Neon Glow Effects */
+        .carousel-item {
+            border: 2px solid rgba(123, 0, 255, 0.5);
+            box-shadow: 
+                0 0 15px rgba(123, 0, 255, 0.3),
+                0 0 30px rgba(123, 0, 255, 0.2),
+                inset 0 0 15px rgba(123, 0, 255, 0.3);
+            backdrop-filter: blur(5px);
+            background: rgba(15, 15, 26, 0.6);
+        }
+
+        .carousel-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                45deg,
+                rgba(123, 0, 255, 0.2) 0%,
+                transparent 60%
+            );
+            z-index: 2;
+        }
+
+        /* Live Indicator */
+        .live-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 3;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Viewer Count */
+        .viewer-count {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: white;
+            z-index: 3;
+        }
+
+        /* Modified Buttons */
+        .carousel-button {
+            background: rgba(123, 0, 255, 0.2);
+            border: 1px solid rgba(123, 0, 255, 0.5);
+            box-shadow: 0 0 15px rgba(123, 0, 255, 0.3);
+        }
+
+        .carousel-button:hover {
+            background: rgba(123, 0, 255, 0.4);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Stream Chat-like Dots */
+        .dot {
+            background: rgba(123, 0, 255, 0.3);
+            box-shadow: 0 0 10px rgba(123, 0, 255, 0.2);
+        }
+
+        .dot.active {
+            background: rgb(123, 0, 255);
+            box-shadow: 0 0 15px rgba(123, 0, 255, 0.5);
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-100px) translateX(50px); }
+            100% { transform: translateY(0) translateX(0); }
+        }
+
+    .carousel-container {
+    width: 1200px;
+    height: 600px;
+    position: relative;
+    perspective: 1000px;
+    margin: 2rem auto;
+    transform-style: preserve-3d;
+    overflow: visible; /* Add this to ensure overlapping items are visible */
+    }
+
+    .carousel {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .carousel-item {
+    position: absolute;
+    width: 400px;
+    height: 600px;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    margin-left: -200px;
+    margin-top: -300px;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    transition: all 0.5s;
+    overflow: hidden;
+    }
+
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .carousel-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .carousel-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 60%,
+                rgba(0, 0, 0, 0.7)
+            );
+            z-index: 1;
+        }
+
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .carousel-button:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-button.prev {
+            left: -100px;
+        }
+
+        .carousel-button.next {
+            right: -100px;
+        }
+
+        .dots-container {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+        }
+
+        .dot {
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+
+        .dot:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .dot.active {
+            width: 50px;
+            background: #fff;
+        }
+
+        .image-title {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            z-index: 2;
+            font-size: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+        }
+
+        .carousel-item:hover .image-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 1300px) {
+            .carousel-container {
+                width: 900px;
+            }
+            .carousel-item {
+                width: 300px;
+                height: 450px;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .carousel-container {
+                width: 600px;
+            }
+            .carousel-button.prev {
+                left: -50px;
+            }
+            .carousel-button.next {
+                right: -50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="carousel-container">
+        <div class="carousel">
+            <div class="carousel-item">
+                <img src="https://picsum.photos/400/600?random=1" alt="Nature">
+                <h3 class="image-title">Wild Nature</h3>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    LIVE
+                </div>
+                <div class="viewer-count">
+                    <i class="fas fa-eye"></i>
+                    <span class="count">1.2K watching</span>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="https://picsum.photos/400/600?random=2" alt="Architecture">
+                <h3 class="image-title">Urban Life</h3>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    LIVE
+                </div>
+                <div class="viewer-count">
+                    <i class="fas fa-eye"></i>
+                    <span class="count">1.2K watching</span>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="https://picsum.photos/400/600?random=3" alt="People">
+                <h3 class="image-title">Human Stories</h3>
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    LIVE
+                </div>
+                <div class="viewer-count">
+                    <i class="fas fa-eye"></i>
+                    <span class="count">1.2K watching</span>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-button prev">←</button>
+        <button class="carousel-button next">→</button>
+        <div class="dots-container"></div>
+    </div>
+
+    <script>
+        const carousel = document.querySelector('.carousel');
+        const items = document.querySelectorAll('.carousel-item');
+        const prevButton = document.querySelector('.prev');
+        const nextButton = document.querySelector('.next');
+        const dotsContainer = document.querySelector('.dots-container');
+
+        let currentIndex = 0;
+        const totalItems = items.length;
+
+        // Create dots
+        items.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.classList.add('dot');
+            if (index === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(index));
+            dotsContainer.appendChild(dot);
+        });
+
+        const dots = document.querySelectorAll('.dot');
+
+        function updateDots() {
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentIndex);
+            });
+        }
+
+        function updateCarousel() {
+            items.forEach((item, index) => {
+                // Calculate relative index for infinite loop effect
+                let relativeIndex = ((index - currentIndex) % totalItems + totalItems) % totalItems;
+                
+                // Adjust position for infinite scrolling
+                if (relativeIndex > 1) relativeIndex -= totalItems;
+                if (relativeIndex < -1) relativeIndex += totalItems;
+                
+                const translateX = relativeIndex * 350; // Increased overlap
+                const translateZ = Math.abs(relativeIndex) * -50; // Reduced depth
+                const opacity = 1 - (Math.abs(relativeIndex) * 0.2);
+                
+                item.style.transform = `
+                    translateX(${translateX}px)
+                    translateZ(${translateZ}px)
+                `;
+                item.style.opacity = opacity;
+                
+                // Simplified z-index
+                const zIndex = 10 - Math.abs(relativeIndex);
+                item.style.zIndex = zIndex;
+            });
+        }
+
+        function goToSlide(index) {
+            currentIndex = index;
+            updateCarousel();
+            updateDots();
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % totalItems;
+            updateCarousel();
+            updateDots();
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+            updateCarousel();
+            updateDots();
+        }
+
+        // Initialize carousel
+        updateCarousel();
+
+        // Event listeners
+        nextButton.addEventListener('click', nextSlide);
+        prevButton.addEventListener('click', prevSlide);
+
+        // Auto-advance
+        let autoAdvance = setInterval(nextSlide, 3000); // Faster rotation
+
+        carousel.addEventListener('mouseenter', () => {
+            clearInterval(autoAdvance);
+        });
+
+        carousel.addEventListener('mouseleave', () => {
+            autoAdvance = setInterval(nextSlide, 3000);
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight') nextSlide();
+        });
+
+        // Touch support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        carousel.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        carousel.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) {
+                nextSlide();
+            } else if (touchEndX - touchStartX > 50) {
+                prevSlide();
+            }
+        });
+
+        // Add this to your existing JavaScript to create floating particles
+        function createParticles() {
+            const particlesContainer = document.createElement('div');
+            particlesContainer.className = 'particles';
+            document.body.appendChild(particlesContainer);
+
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random size between 5 and 20px
+                const size = Math.random() * 15 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random starting position
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation duration and delay
+                particle.style.animationDuration = `${Math.random() * 20 + 10}s`;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+
+            // Add some "data stream" particles
+            for (let i = 0; i < 10; i++) {
+                const stream = document.createElement('div');
+                stream.className = 'data-stream';
+                stream.style.left = `${Math.random() * 100}%`;
+                stream.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                stream.style.animationDelay = `${Math.random() * 2}s`;
+                particlesContainer.appendChild(stream);
+            }
+        }
+
+        // Call this when the page loads
+        createParticles();
+
+        // Add this to simulate random viewer count updates
+        function updateViewerCount() {
+            const counts = document.querySelectorAll('.count');
+            counts.forEach(count => {
+                const viewers = Math.floor(Math.random() * 2000 + 500);
+                count.textContent = viewers > 1000 ? 
+                    (viewers/1000).toFixed(1) + 'K watching' : 
+                    viewers + ' watching';
+            });
+        }
+
+        setInterval(updateViewerCount, 5000);
+    </script>
+</body>
+</html>
